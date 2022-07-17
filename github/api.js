@@ -2,8 +2,8 @@ const fetch = require('node-fetch');
 
 let cacheReleases = [];
 let getPage = ( page, cb = () => {} ) => {
-    fetch('https://api.github.com/repos/Anuken/Mindustry/releases?per_page=50&page='+page, { headers: { 'user-agent': '"Thorium Launcher"/0.1' } }).then(data => data.json()).then(data => {
-        cacheReleases = cacheReleases.concat(data);
+    fetch('https://api.github.com/repos/Anuken/Mindustry/releases?per_page=10&page='+page, { headers: { 'user-agent': '"Thorium Launcher"/0.1' } }).then(data => data.json()).then(data => {
+        data.forEach(r => cacheReleases.push(r));
         cb(data);
     })
 }

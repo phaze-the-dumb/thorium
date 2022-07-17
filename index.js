@@ -43,6 +43,11 @@ app.on('ready', () => {
         sock = socket;
         sockets.push(socket);
 
+        socket.send(JSON.stringify({
+            cmd: 'setVer',
+            tag: currentVerion
+        }))
+
         log('ELECTRON', 'Loaded Window')
         socket.on('message', ( data ) => {
             let msg = JSON.parse(data);
@@ -58,6 +63,56 @@ app.on('ready', () => {
 
             if(msg.cmd === 'setVer'){
                 log('VERSIONS', 'Version Set To: '+msg.ver)
+                currentVerion = msg.ver;
+
+                socket.send(JSON.stringify({ cmd: 'tab', tab: 0 }));
+
+                let release = gh.cacheReleases.find(x => x.tag_name === msg.ver);
+                if(!release){
+                    log('THORIUM', 'Cannot Find Github Release');
+                    sock.send(JSON.stringify({ cmd: 'error', msg: 'Invaild Version' }));
+
+                    return;
+                }
+
+                let asset = release.assets.find(x => x.name === 'Mindustry.jar');
+                if(!asset){
+                    log('THORIUM', 'Cannot Find JAVA File');
+                    sock.send(JSON.stringify({ cmd: 'error', msg: 'Invaild Version' }));
+
+                    return;
+                }
+
+                fs.mkdirSync('vers/'+(release.tag_name.split('.').join('-'))+'/', { recursive: true });
+                log('NETWORK', 'Downloading '+data.name+' From '+asset.browser_download_url);
+
+                fetch(asset.browser_download_url).then(g => {
+                    let clength = g.headers.get('content-length');
+                    let gd = '';
+    
+                    let stream = fs.createWriteStream('vers/'+(release.tag_name.split('.').join('-'))+'/Mindustry.jar')
+                    g.body.pipe(stream);
+    
+                    g.body.on('data', chunk => {
+                        gd += chunk;
+                        sock.send(JSON.stringify({ cmd: 'setload', p: ( gd.length / clength ) * 100 }));
+                    })
+    
+                    g.body.on('end', () => {
+                        log('NETWORK', 'Download Finished...');
+    
+                        sock.send(JSON.stringify({ cmd: 'setload', p: 100 }));
+                        currentVerion = release.tag_name.split('.').join('-');
+    
+                        da.cVersion = release.tag_name.split('.').join('-');
+                        da.versions.push(release);
+    
+                        fs.writeFileSync('data.json', JSON.stringify(da));
+                    })
+                }).catch(e => {
+                    log('NETWORK', 'Download Failed: '+e);
+                    sock.send(JSON.stringify({ cmd: 'error', msg: 'Download Failed' }));
+                })
             }
     
             if(msg.cmd === 'min'){
@@ -131,6 +186,11 @@ let launchGame = () => {
 
                     da.cVersion = data.tag_name.split('.').join('-');
                     da.versions.push(data);
+
+                    socket.send(JSON.stringify({
+                        cmd: 'setVer',
+                        tag: currentVerion
+                    }))
 
                     fs.writeFileSync('data.json', JSON.stringify(da));
                     launchGame();

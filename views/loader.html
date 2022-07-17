@@ -242,8 +242,8 @@
         </div>
 
         <div class="vers">
-            <h4>Current Version:</h4>
-            <h2 id="cver">125.5</h2>
+            <h4 style="margin: 0;">Current Version:</h4>
+            <h2 id="cver">None</h2>
             <hr />
 
             <div class="versionsList"></div>
@@ -326,6 +326,11 @@
                     }
                 }
 
+                if(data.cmd === 'tab'){
+                    tabs.forEach(t => t.style.display = 'none');
+                    tabs[data.tab].style.display = 'block';
+                }
+
                 if(data.cmd === 'setload'){
                     let loadingBar = document.querySelector('.loadingBarInner');
                     loadingBar.style.width = data.p+'%';
@@ -349,12 +354,17 @@
                     let text = '';
 
                     data.data.forEach(v => {
-                        text += '<h2>'+v.name+'</h2><p>'+v.body.split('\n').join('<br />')+'</p><div class="downloadButton" onclick="setVer(\''+v.tag+'\')">Download</div><hr />'
+                        console.log(v);
+                        text += '<h2>'+v.name+'</h2><p>'+v.body.split('\n').join('<br />')+'</p><div class="downloadButton" onclick="setVer(\''+v.tag_name+'\')">Download</div><hr />'
                     })
 
                     text += '<div class="pageContainer"><div class="downloadButton" onclick="backAPage()"><</div> Page '+ ( verPage + 1 ) +' <div class="downloadButton" onclick="forwardAPage()">></div></div>'
 
                     document.querySelector('.versionsList').innerHTML = text;
+                }
+
+                if(data.cmd === 'setVer'){
+                    document.querySelector('#cver').innerHTML = data.tag;
                 }
             }
         </script>
