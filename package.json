@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "node-fetch": "^2.6.7",
+    "ws": "^8.7.0"
+  },
+  "devDependencies": {
+    "electron": "^19.0.1"
+  },
+  "scripts": {
+    "start": "electron ."
+  }
+}
